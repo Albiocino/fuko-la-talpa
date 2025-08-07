@@ -3,13 +3,57 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Classifica</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: monospace;
+      padding: 20px;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
+    }
+    th {
+      background-color: #222;
+    }
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+  </style>
 </head>
 <body>
-  <h1>Classifica</h1>
-  <ul id="classifica-list"></ul>
-  <script src="app.js"></script>
+  <h1>🏆 Classifica</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Giocatore</th>
+        <th>Punteggio</th>
+      </tr>
+    </thead>
+    <tbody id="scoreTable"></tbody>
+  </table>
+
+  <script>
+    const scores = JSON.parse(localStorage.getItem('scores') || '{}');
+    const table = document.getElementById('scoreTable');
+
+    const sorted = Object.entries(scores)
+      .sort((a, b) => b[1] - a[1]);
+
+    for (const [name, score] of sorted) {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${name}</td><td>${score}</td>`;
+      table.appendChild(row);
+    }
+  </script>
 </body>
 </html>

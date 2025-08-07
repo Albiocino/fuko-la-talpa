@@ -2,14 +2,86 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scambia Task</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: monospace;
+      padding: 20px;
+      text-align: center;
+    }
+    input, button {
+      font-size: 18px;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    .info-box {
+      margin-top: 30px;
+      background-color: #222;
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Scambia Task</h1>
-  <p>Attendi un altro giocatore per effettuare lo scambio…</p>
-  <script src="app.js"></script>
+  <h1>🔄 Scambia Task</h1>
+  <p>Inserisci la tua password personale per entrare in attesa di scambio.</p>
+  <input type="password" id="passwordInput" placeholder="Password" />
+  <button onclick="attemptSwap()">SCAMBIA</button>
+  <div class="info-box" id="resultBox"></div>
+
+  <script>
+    const passwordToPlayer = {
+      "Cardio89!": "Feddino",
+      "Neuro76!": "Chiaretta",
+      "Trauma44!": "Bomber",
+      "Gasto33!": "Perri",
+      "Emato22!": "Fefè",
+      "Infettivo55!": "Vax",
+      "Anest90!": "Alpha"
+    };
+
+    let swapQueue = JSON.parse(localStorage.getItem("swapQueue") || "[]");
+    let assignments = JSON.parse(localStorage.getItem("taskAssignments") || "{}");
+
+    function attemptSwap() {
+      const pw = document.getElementById("passwordInput").value.trim();
+      const name = passwordToPlayer[pw];
+      const resultBox = document.getElementById("resultBox");
+
+      if (!name) {
+        resultBox.innerText = "Password non riconosciuta.";
+        return;
+      }
+
+      if (!assignments[name]) {
+        resultBox.innerText = "Non hai un task da scambiare.";
+        return;
+      }
+
+      // Se c'è già un altro in attesa, scambiamo i task
+      if (swapQueue.length > 0) {
+        const partner = swapQueue.shift();
+        if (assignments[partner]) {
+          const temp = assignments[name];
+          assignments[name] = assignments[partner];
+          assignments[partner] = temp;
+          localStorage.setItem("taskAssignments", JSON.stringify(assignments));
+          localStorage.setItem("swapQueue", JSON.stringify(swapQueue));
+          resultBox.innerText = `Task scambiato con ${partner}!`;
+        } else {
+          resultBox.innerText = "Errore: l'altro giocatore non ha più un task valido.";
+        }
+      } else {
+        // Nessuno in attesa → metto in coda
+        swapQueue.push(name);
+        localStorage.setItem("swapQueue", JSON.stringify(swapQueue));
+        resultBox.innerText = "In attesa di un altro giocatore...";
+      }
+    }
+  </script>
 </body>
 </html>
