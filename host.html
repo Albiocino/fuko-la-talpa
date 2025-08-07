@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Area Host</title>
+  <title>Area Host (Debug)</title>
   <style>
     body {
       background-color: #111;
@@ -33,10 +33,17 @@
       margin-top: 10px;
       display: block;
     }
+    .log-box {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #333;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
-  <h1>🔐 Area Riservata Host</h1>
+  <h1>🔐 Area Host (Debug)</h1>
 
   <div id="loginSection">
     <p>Inserisci la password per accedere:</p>
@@ -63,6 +70,7 @@
     <div class="section">
       <h2>🎯 Assegna Task Casuali</h2>
       <button onclick="assignTasks()">Assegna</button>
+      <div class="log-box" id="assignLog"></div>
     </div>
 
     <div class="section">
@@ -160,14 +168,27 @@
       const players = getData("players");
       let tasks = getData("tasks").slice();
       const assignments = {};
+      const log = [];
+
+      if (players.length === 0 || tasks.length === 0) {
+        document.getElementById("assignLog").innerText = "⚠️ Aggiungi prima giocatori e task.";
+        return;
+      }
+
       players.forEach(p => {
-        if (tasks.length === 0) return;
-        const index = Math.floor(Math.random() * tasks.length);
-        assignments[p] = tasks[index];
-        tasks.splice(index, 1);
+        if (tasks.length === 0) {
+          log.push(`❌ Nessun task rimanente per ${p}`);
+        } else {
+          const index = Math.floor(Math.random() * tasks.length);
+          assignments[p] = tasks[index];
+          log.push(`✅ ${p} ha ricevuto un task.`);
+          tasks.splice(index, 1);
+        }
       });
+
       localStorage.setItem("taskAssignments", JSON.stringify(assignments));
-      alert("Task assegnati!");
+      document.getElementById("assignLog").innerText = log.join("\n");
+      console.log("📦 Assegnazioni salvate:", assignments);
     }
 
     function assignScore() {
