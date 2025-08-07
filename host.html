@@ -2,189 +2,192 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Host - Area Privata</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Area Host</title>
   <style>
     body {
-      font-family: monospace;
       background-color: #111;
       color: #fff;
+      font-family: monospace;
       padding: 20px;
     }
-    h2 {
-      border-bottom: 1px solid #555;
-      padding-bottom: 5px;
+    h1 {
+      text-align: center;
     }
-    .hidden {
-      display: none;
-    }
-    input, button, select {
-      margin: 5px 0;
-      padding: 8px;
+    input, button, select, textarea {
       font-size: 16px;
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      box-sizing: border-box;
     }
     .section {
-      margin-top: 30px;
-    }
-    .list {
+      margin: 20px 0;
+      padding: 15px;
       background-color: #222;
-      padding: 10px;
+      border-radius: 8px;
+    }
+    label {
+      font-weight: bold;
       margin-top: 10px;
-      border-radius: 6px;
+      display: block;
     }
   </style>
 </head>
 <body>
-  <h1>HOST - Area Privata</h1>
+  <h1>🔐 Area Riservata Host</h1>
+
   <div id="loginSection">
     <p>Inserisci la password per accedere:</p>
-    <input type="password" id="passwordInput" />
-    <button onclick="checkPassword()">Entra</button>
+    <input type="password" id="hostPassword" placeholder="Password" />
+    <button onclick="checkHost()">Entra</button>
     <p id="loginError" style="color: red;"></p>
   </div>
 
-  <div id="adminPanel" class="hidden">
-    <!-- GIOCATORI -->
+  <div id="hostPanel" style="display:none;">
     <div class="section">
       <h2>👥 Giocatori</h2>
-      <input type="text" id="newPlayer" placeholder="Nome giocatore" />
+      <input type="text" id="newPlayer" placeholder="Nuovo giocatore" />
       <button onclick="addPlayer()">Aggiungi</button>
-      <div class="list" id="playerList"></div>
+      <ul id="playerList"></ul>
     </div>
 
-    <!-- TASK -->
     <div class="section">
       <h2>📝 Task</h2>
-      <input type="text" id="newTask" placeholder="Nuovo task" />
+      <textarea id="newTask" placeholder="Nuovo task..."></textarea>
       <button onclick="addTask()">Aggiungi Task</button>
-      <div class="list" id="taskList"></div>
+      <ul id="taskList"></ul>
     </div>
 
-    <!-- ASSEGNA TASK -->
     <div class="section">
-      <h2>🎯 Assegna Task</h2>
-      <button onclick="assignTasks()">Assegna task casuali</button>
-      <p id="assignMsg"></p>
+      <h2>🎯 Assegna Task Casuali</h2>
+      <button onclick="assignTasks()">Assegna</button>
     </div>
 
-    <!-- PUNTEGGI -->
     <div class="section">
       <h2>🧮 Assegna Punteggio</h2>
-      <select id="playerSelect"></select>
-      <select id="pointsSelect">
-        <option value="10">+10 Talpa non scoperta</option>
-        <option value="5">+5 Chi scopre la talpa</option>
-        <option value="2">+2 Collaboratori</option>
-        <option value="0">0 Talpa scoperta</option>
-        <option value="-2">–2 Collaboratori scoperti</option>
-        <option value="-5">–5 Accusa sbagliata</option>
+      <select id="scorePlayer"></select>
+      <select id="scoreValue">
+        <option value="10">+10 (Talpa non scoperta)</option>
+        <option value="5">+5 (Chi scopre la talpa)</option>
+        <option value="2">+2 (Collaboratori)</option>
+        <option value="0">0 (Talpa scoperta)</option>
+        <option value="-2">-2 (Collaboratori scoperti)</option>
+        <option value="-5">-5 (Accusa sbagliata)</option>
       </select>
-      <button onclick="addPoints()">Assegna</button>
+      <button onclick="assignScore()">Assegna Punti</button>
     </div>
 
-    <!-- RESET -->
     <div class="section">
       <h2>♻️ Reset Giornata</h2>
-      <button onclick="resetDay()">Resetta giornata</button>
+      <button onclick="resetDay()">Reset</button>
     </div>
   </div>
 
   <script>
-    const PASSWORDS = ["Cardio89!", "Neuro76!"];
+    const HOST_PASSWORD = "Pneumo98!";
 
-    function checkPassword() {
-      const input = document.getElementById('passwordInput').value;
-      if (PASSWORDS.includes(input)) {
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('adminPanel').classList.remove('hidden');
+    function checkHost() {
+      const pw = document.getElementById("hostPassword").value;
+      if (pw === HOST_PASSWORD) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("hostPanel").style.display = "block";
         renderAll();
       } else {
-        document.getElementById('loginError').innerText = "Password errata.";
+        document.getElementById("loginError").innerText = "Password errata.";
       }
     }
 
-    function get(key) {
-      return JSON.parse(localStorage.getItem(key) || '[]');
+    function getData(key) {
+      return JSON.parse(localStorage.getItem(key) || "[]");
     }
-
-    function set(key, value) {
+    function setData(key, value) {
       localStorage.setItem(key, JSON.stringify(value));
     }
 
-    function renderAll() {
-      const players = get('players');
-      const tasks = get('tasks');
-      const scores = get('scores') || {};
-      const playerList = document.getElementById('playerList');
-      const taskList = document.getElementById('taskList');
-      const playerSelect = document.getElementById('playerSelect');
-
-      playerList.innerHTML = players.map(p => \`\${p} <button onclick="removePlayer('\${p}')">❌</button>\`).join('<br>');
-      taskList.innerHTML = tasks.map((t, i) => \`\${t} <button onclick="removeTask(\${i})">🗑️</button>\`).join('<br>');
-
-      playerSelect.innerHTML = players.map(p => \`<option value="\${p}">\${p}</option>\`).join('');
-    }
-
     function addPlayer() {
-      const name = document.getElementById('newPlayer').value.trim();
+      const name = document.getElementById("newPlayer").value.trim();
       if (!name) return;
-      const players = get('players');
+      const players = getData("players");
       if (!players.includes(name)) {
         players.push(name);
-        set('players', players);
-        renderAll();
+        setData("players", players);
+        document.getElementById("newPlayer").value = "";
+        renderPlayers();
       }
     }
 
-    function removePlayer(name) {
-      const players = get('players').filter(p => p !== name);
-      set('players', players);
-      renderAll();
-    }
-
     function addTask() {
-      const task = document.getElementById('newTask').value.trim();
+      const task = document.getElementById("newTask").value.trim();
       if (!task) return;
-      const tasks = get('tasks');
+      const tasks = getData("tasks");
       tasks.push(task);
-      set('tasks', tasks);
-      renderAll();
+      setData("tasks", tasks);
+      document.getElementById("newTask").value = "";
+      renderTasks();
     }
 
-    function removeTask(index) {
-      const tasks = get('tasks');
-      tasks.splice(index, 1);
-      set('tasks', tasks);
-      renderAll();
+    function renderPlayers() {
+      const players = getData("players");
+      const list = document.getElementById("playerList");
+      const select = document.getElementById("scorePlayer");
+      list.innerHTML = "";
+      select.innerHTML = "";
+      players.forEach(p => {
+        const li = document.createElement("li");
+        li.innerText = p;
+        list.appendChild(li);
+        const option = document.createElement("option");
+        option.value = p;
+        option.innerText = p;
+        select.appendChild(option);
+      });
+    }
+
+    function renderTasks() {
+      const tasks = getData("tasks");
+      const list = document.getElementById("taskList");
+      list.innerHTML = "";
+      tasks.forEach(t => {
+        const li = document.createElement("li");
+        li.innerText = t;
+        list.appendChild(li);
+      });
     }
 
     function assignTasks() {
-      const players = get('players');
-      let tasks = get('tasks').slice(); // copia
-      const assigned = {};
+      const players = getData("players");
+      let tasks = getData("tasks").slice();
+      const assignments = {};
       players.forEach(p => {
         if (tasks.length === 0) return;
-        const idx = Math.floor(Math.random() * tasks.length);
-        assigned[p] = tasks[idx];
-        tasks.splice(idx, 1);
+        const index = Math.floor(Math.random() * tasks.length);
+        assignments[p] = tasks[index];
+        tasks.splice(index, 1);
       });
-      localStorage.setItem('taskAssignments', JSON.stringify(assigned));
-      document.getElementById('assignMsg').innerText = "Task assegnati!";
+      localStorage.setItem("taskAssignments", JSON.stringify(assignments));
+      alert("Task assegnati!");
     }
 
-    function addPoints() {
-      const player = document.getElementById('playerSelect').value;
-      const points = parseInt(document.getElementById('pointsSelect').value);
-      const scores = JSON.parse(localStorage.getItem('scores') || '{}');
-      scores[player] = (scores[player] || 0) + points;
-      localStorage.setItem('scores', JSON.stringify(scores));
-      alert("Punteggio aggiornato per " + player);
+    function assignScore() {
+      const player = document.getElementById("scorePlayer").value;
+      const score = parseInt(document.getElementById("scoreValue").value);
+      const scores = JSON.parse(localStorage.getItem("scores") || "{}");
+      scores[player] = (scores[player] || 0) + score;
+      localStorage.setItem("scores", JSON.stringify(scores));
+      alert("Punteggio aggiornato.");
     }
 
     function resetDay() {
-      localStorage.removeItem('taskAssignments');
-      document.getElementById('assignMsg').innerText = "Giornata resettata. Task azzerati.";
+      localStorage.removeItem("taskAssignments");
+      localStorage.removeItem("swapQueue");
+      alert("Giornata resettata!");
+    }
+
+    function renderAll() {
+      renderPlayers();
+      renderTasks();
     }
   </script>
 </body>

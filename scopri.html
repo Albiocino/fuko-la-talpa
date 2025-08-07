@@ -27,11 +27,12 @@
   </style>
 </head>
 <body>
-  <h1>Scopri il tuo task</h1>
-  <p>Inserisci la tua <strong>password personale</strong> per sapere se hai ricevuto un task oggi.</p>
-  <input type="password" id="passwordInput" placeholder="Password" />
-  <button onclick="checkTask()">SCOPRI</button>
-  <div class="task-box" id="taskResult"></div>
+  <h1>🎯 Scopri il tuo task</h1>
+  <p>Inserisci la tua password per scoprire il compito segreto di oggi:</p>
+  <input type="text" id="passwordInput" placeholder="Password" />
+  <button onclick="showTask()">SCOPRI</button>
+
+  <div class="task-box" id="taskBox"></div>
 
   <script>
     const passwordToPlayer = {
@@ -41,23 +42,26 @@
       "Gasto33!": "Perri",
       "Emato22!": "Fefè",
       "Infettivo55!": "Vax",
-      "Anest90!": "Alpha"
+      "Pneumo98!": "Alpha"
     };
 
-    const assignments = JSON.parse(localStorage.getItem('taskAssignments') || '{}');
-
-    function checkTask() {
-      const pw = document.getElementById('passwordInput').value.trim();
+    function showTask() {
+      const pw = document.getElementById("passwordInput").value.trim();
       const name = passwordToPlayer[pw];
-      const resultBox = document.getElementById('taskResult');
+      const box = document.getElementById("taskBox");
+
       if (!name) {
-        resultBox.innerText = "Password errata o non riconosciuta.";
+        box.innerText = "❌ Password non riconosciuta.";
         return;
       }
+
+      const assignments = JSON.parse(localStorage.getItem("taskAssignments") || "{}");
       if (assignments[name]) {
-        resultBox.innerHTML = "<strong>Il tuo task segreto:</strong><br>" + assignments[name];
+        box.innerText = `🕵️ Il tuo task segreto è:
+
+"${assignments[name]}"`;
       } else {
-        resultBox.innerText = "Oggi NON sei tu la talpa.";
+        box.innerText = "😎 Oggi NON sei tu la talpa.";
       }
     }
   </script>
