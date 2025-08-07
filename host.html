@@ -2,279 +2,114 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Area Host (Persistente)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Host - FUKo La Talpa</title>
   <style>
-    body { background:#111; color:#fff; font-family: monospace; padding:20px; }
-    h1 { text-align:center; }
-    input, button, select, textarea { font-size:16px; padding:10px; margin:6px 0; width:100%; box-sizing:border-box; }
-    .section { margin:20px 0; padding:15px; background:#222; border-radius:8px; }
-    .row { display:flex; gap:8px; }
-    .row > * { flex:1; }
-    .log { background:#333; padding:8px; border-radius:6px; white-space:pre-wrap; font-size:14px; }
-    label { font-weight:700; display:block; margin-top:8px; }
+    body {
+      font-family: monospace;
+      background-color: #111;
+      color: #fff;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #ffcc00;
+    }
+    input, button, textarea {
+      font-family: monospace;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      padding: 5px;
+      font-size: 1em;
+    }
+    .task {
+      margin-bottom: 5px;
+      border-bottom: 1px dotted #555;
+      padding-bottom: 3px;
+    }
+    .task button {
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>🔐 Area Riservata Host</h1>
-
-  <div id="loginSection">
-    <p>Inserisci la password per accedere:</p>
-    <input type="password" id="hostPassword" placeholder="Password" />
-    <button onclick="checkHost()">Entra</button>
-    <p id="loginError" style="color:#ff6b6b"></p>
-  </div>
+  <h1>Area Host - FUKo La Talpa</h1>
+  <p>Inserisci password host per accedere:</p>
+  <input type="password" id="hostPassword" placeholder="Password" />
+  <button onclick="checkPassword()">Accedi</button>
 
   <div id="hostPanel" style="display:none;">
-    <div class="section">
-      <div class="row">
-        <button onclick="exportData()">📤 Esporta dati</button>
-        <label for="importFile">📥 Importa dati (.json)</label>
-        <input type="file" id="importFile" accept="application/json" onchange="importData(event)" />
-      </div>
-      <div class="log" id="seedInfo"></div>
-    </div>
-
-    <div class="section">
-      <h2>👥 Giocatori</h2>
-      <div class="row">
-        <input type="text" id="newPlayer" placeholder="Nuovo giocatore" />
-        <button onclick="addPlayer()">Aggiungi</button>
-      </div>
-      <ul id="playerList"></ul>
-    </div>
-
-    <div class="section">
-      <h2>📝 Task</h2>
-      <div class="row">
-        <textarea id="newTask" placeholder="Nuovo task..."></textarea>
-        <button onclick="addTask()">Aggiungi Task</button>
-      </div>
-      <ul id="taskList"></ul>
-    </div>
-
-    <div class="section">
-      <h2>🎯 Assegna Task Casuali</h2>
-      <button onclick="assignTasks()">Assegna</button>
-      <div class="log" id="assignLog"></div>
-    </div>
-
-    <div class="section">
-      <h2>🧮 Assegna Punteggio</h2>
-      <div class="row">
-        <select id="scorePlayer"></select>
-        <select id="scoreValue">
-          <option value="10">+10 (Talpa non scoperta)</option>
-          <option value="5">+5 (Chi scopre la talpa)</option>
-          <option value="2">+2 (Collaboratori)</option>
-          <option value="0">0 (Talpa scoperta)</option>
-          <option value="-2">-2 (Collaboratori scoperti)</option>
-          <option value="-5">-5 (Accusa sbagliata)</option>
-        </select>
-        <button onclick="assignScore()">Assegna</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>♻️ Reset Giornata</h2>
-      <button onclick="resetDay()">Reset</button>
-    </div>
+    <h2>📝 Gestione Task</h2>
+    <textarea id="newTask" rows="2" cols="40" placeholder="Scrivi un nuovo task..."></textarea><br>
+    <button onclick="addTask()">Aggiungi Task</button>
+    <div id="taskList"></div>
   </div>
 
   <script>
-    const HOST_PASSWORD = "Pneumo98!";
-    const DEFAULT_PLAYERS = ["Feddino","Chiaretta","Bomber","Perri","Fefè","Vax","Alpha"];
-    const DEFAULT_TASKS = [
+    const defaultTasks = [
       "Fai in modo che il gruppo perda un mezzo di trasporto",
-      "Quando siamo in un ristorante a mangiare, vai in cucina e cucina qualche cosa",
-      "Ruba degli oggetti degli altri di continuo senza farti beccare fino a cena",
-      "Cerca di convincere almeno la metà del gruppo +1 a prendere il piatto che ispira meno di tutti sul menù",
+      "Quando siamo in un ristorante a mangiare, vai in cucina e cucina qualche cosa di Italiano",
+      "Ruba degli oggetti dei tuoi amici di continuo senza farti beccare fino a cena",
+      "Cerca di convincere almeno 2 persone a prendere il piatto che ispira meno di tutti sul menù",
       "Non puoi parlare con un membro del gruppo per tutto il giorno (scrivere o altre forme di comunicazione sono bandite)",
       "Imita un altro membro del gruppo per tutta una giornata",
-      "Convinci un gruppo di turisti che non parla italiano che sei una persona famosa in italia",
-      "Inventa un ballo ed insegnalo a sconosciuti",
-      "Comportati da fascista per tutto il giorno (atteggiamento, commenti, uscite, vestiario)",
+      "Convinci un gruppo di turisti che non parla italiano che sei una persona famosa in Italia",
+      "Comportati da fascista per tutto il giorno (atteggiamento, commenti, uscite, vestiario, ...)",
       "Sostieni che sei allergico a qualcosa di assurdo (es. 'alle sdraio') e agisci di conseguenza",
-      "Comportati come se fossi in un reality show: parlando a una telecamera immaginaria",
-      "Insisti per negoziare ogni singolo prezzo, anche nei posti dove è scritto 'fisso'",
-      "Fai amicizia con un venditore ambulante e proponi al gruppo di andare a casa sua",
+      "Comportati tutto il giorno come se fossi in un reality show (es. parlando a una telecamera immaginaria)",
+      "Fai amicizia con un venditore ambulante e porta il gruppo a casa sua",
       "Prova a vendere oggetti tuoi a d un venditore ambulante",
-      "Compra spezie al mercato e prepara un piatto “locale” da far assaggiare agli altri (deve essere immangiabile)",
-      "devi imparare uno scioglilingua swahili e recitalo ad alta voce la sera a cena",
-      "Inventa una leggenda locale (es. 'la sirena di Nungwi') e raccontala a tutti fingendo che sia vera",
-      "Fai finta di essere una guida turistica esperta e inizia un tour improvvisato per dei turisti"
+      "Compra una cosa disgustosa da mangiare e convinci almeno la metà +1 del gruppo che è buonissima e fagliela assaggiare"
     ];
 
-    function checkHost() {
-      const pw = document.getElementById("hostPassword").value;
-      if (pw === HOST_PASSWORD) {
-        document.getElementById("loginSection").style.display = "none";
+    const password = "Pneumo98!";
+
+    function checkPassword() {
+      const input = document.getElementById("hostPassword").value;
+      if (input === password) {
         document.getElementById("hostPanel").style.display = "block";
-        ensureSeed();
-        renderAll();
+        loadTasks();
       } else {
-        document.getElementById("loginError").innerText = "Password errata.";
+        alert("Password errata.");
       }
     }
 
-    // Persistenza
-    function get(key, fallback) {
-      const raw = localStorage.getItem(key);
-      if (raw === null || raw === undefined) return fallback;
-      try { return JSON.parse(raw); } catch (e) { return fallback; }
-    }
-    function set(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
-
-    function ensureSeed() {
-      let seeded = localStorage.getItem("seeded");
-      let info = [];
-      if (!seeded) {
-        set("players", DEFAULT_PLAYERS);
-        set("tasks", DEFAULT_TASKS);
-        set("scores", {});
-        localStorage.setItem("seeded","1");
-        info.push("✅ Seed eseguito: giocatori e task di default caricati.");
-      } else {
-        if (!get("players", []).length) set("players", DEFAULT_PLAYERS);
-        if (!get("tasks", []).length) set("tasks", DEFAULT_TASKS);
-        info.push("ℹ️ Seed già presente: uso dati salvati in questo dispositivo.");
+    function loadTasks() {
+      const stored = JSON.parse(localStorage.getItem("tasks") || "[]");
+      if (stored.length === 0) {
+        localStorage.setItem("tasks", JSON.stringify(defaultTasks));
       }
-      info.push("👥 Giocatori: " + get("players", []).length);
-      info.push("📝 Task: " + get("tasks", []).length);
-      document.getElementById("seedInfo").innerText = info.join("\n");
+      renderTasks();
     }
 
-    function exportData() {
-      const data = {
-        players: get("players", []),
-        tasks: get("tasks", []),
-        scores: get("scores", {}),
-        assignments: get("taskAssignments", {}),
-        swapQueue: get("swapQueue", []),
-        seeded: localStorage.getItem("seeded") || "0"
-      };
-      const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "fuko_data_backup.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function importData(evt) {
-      const file = evt.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const data = JSON.parse(reader.result);
-          if (data.players) set("players", data.players);
-          if (data.tasks) set("tasks", data.tasks);
-          if (data.scores) localStorage.setItem("scores", JSON.stringify(data.scores));
-          if (data.assignments) localStorage.setItem("taskAssignments", JSON.stringify(data.assignments));
-          if (data.swapQueue) localStorage.setItem("swapQueue", JSON.stringify(data.swapQueue));
-          if (data.seeded) localStorage.setItem("seeded", data.seeded);
-          renderAll();
-          document.getElementById("seedInfo").innerText = "✅ Dati importati correttamente.";
-        } catch(e) {
-          document.getElementById("seedInfo").innerText = "❌ Errore import: " + e.message;
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    function addPlayer() {
-      const name = document.getElementById("newPlayer").value.trim();
-      if (!name) return;
-      const players = get("players", []);
-      if (!players.includes(name)) {
-        players.push(name);
-        set("players", players);
-        document.getElementById("newPlayer").value = "";
-        renderPlayers();
-      }
+    function renderTasks() {
+      const list = document.getElementById("taskList");
+      list.innerHTML = "";
+      const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+      tasks.forEach((task, index) => {
+        const div = document.createElement("div");
+        div.className = "task";
+        div.innerHTML = `<span>${task}</span>
+                         <button onclick="deleteTask(${index})">❌</button>`;
+        list.appendChild(div);
+      });
     }
 
     function addTask() {
       const task = document.getElementById("newTask").value.trim();
-      if (!task) return;
-      const tasks = get("tasks", []);
-      tasks.push(task);
-      set("tasks", tasks);
-      document.getElementById("newTask").value = "";
-      renderTasks();
-    }
-
-    function renderPlayers() {
-      const players = get("players", []);
-      const list = document.getElementById("playerList");
-      const select = document.getElementById("scorePlayer");
-      list.innerHTML = "";
-      select.innerHTML = "";
-      players.forEach(function(p){
-        const li = document.createElement("li");
-        li.textContent = p;
-        list.appendChild(li);
-        const opt = document.createElement("option");
-        opt.value = p; opt.textContent = p;
-        select.appendChild(opt);
-      });
-    }
-
-    function renderTasks() {
-      const tasks = get("tasks", []);
-      const list = document.getElementById("taskList");
-      list.innerHTML = "";
-      tasks.forEach(function(t){
-        const li = document.createElement("li");
-        li.textContent = t;
-        list.appendChild(li);
-      });
-    }
-
-    function assignTasks() {
-      const players = get("players", []);
-      let tasks = get("tasks", []).slice();
-      const assignments = {};
-      const log = [];
-      if (players.length === 0 || tasks.length === 0) {
-        document.getElementById("assignLog").innerText = "⚠️ Aggiungi prima giocatori e task.";
-        return;
+      if (task) {
+        const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+        tasks.push(task);
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+        document.getElementById("newTask").value = "";
+        renderTasks();
       }
-      players.forEach(function(p){
-        if (tasks.length === 0) {
-          log.push("❌ Nessun task rimanente per " + p);
-        } else {
-          const i = Math.floor(Math.random() * tasks.length);
-          assignments[p] = tasks[i];
-          log.push("✅ " + p + " ha ricevuto un task.");
-          tasks.splice(i,1);
-        }
-      });
-      localStorage.setItem("taskAssignments", JSON.stringify(assignments));
-      document.getElementById("assignLog").innerText = log.join("\n");
-      console.log("📦 Assegnazioni:", assignments);
     }
 
-    function assignScore() {
-      const player = document.getElementById("scorePlayer").value;
-      const delta = parseInt(document.getElementById("scoreValue").value);
-      const scores = get("scores", {});
-      scores[player] = (scores[player] || 0) + delta;
-      localStorage.setItem("scores", JSON.stringify(scores));
-      alert("Punteggio aggiornato.");
-    }
-
-    function resetDay() {
-      localStorage.removeItem("taskAssignments");
-      localStorage.removeItem("swapQueue");
-      document.getElementById("assignLog").innerText = "🔁 Giornata resettata (assegnazioni cancellate).";
-    }
-
-    function renderAll() {
-      renderPlayers();
+    function deleteTask(index) {
+      const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+      tasks.splice(index, 1);
+      localStorage.setItem("tasks", JSON.stringify(tasks));
       renderTasks();
     }
   </script>
