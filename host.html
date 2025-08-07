@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Host - FUKo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Area Host</h1>
+  <div id="login">
+    <input type="password" id="password" placeholder="Password Host" />
+    <button onclick="checkPassword()">Entra</button>
+  </div>
+  <div id="admin" style="display:none;">
+    <h2>Giocatori</h2>
+    <ul id="giocatori-list"></ul>
+    <input id="nuovo-giocatore" placeholder="Nome giocatore" />
+    <button onclick="aggiungiGiocatore()">Aggiungi</button>
+
+    <h2>Task</h2>
+    <ul id="task-list"></ul>
+    <input id="nuovo-task" placeholder="Nuovo task" />
+    <button onclick="aggiungiTask()">Aggiungi</button>
+
+    <h2>Punteggi</h2>
+    <select id="seleziona-giocatore"></select>
+    <select id="valore-punteggio">
+      <option value="10">+10 Talpa non scoperta</option>
+      <option value="5">+5 Scopre la talpa</option>
+      <option value="2">+2 Collaboratore</option>
+      <option value="0">0 Talpa scoperta</option>
+      <option value="-2">-2 Coll. scoperto</option>
+      <option value="-5">-5 Accusa sbagliata</option>
+    </select>
+    <button onclick="assegnaPunti()">Assegna</button>
+
+    <h2>Reset</h2>
+    <button onclick="resetGiornata()">Reset Giornata</button>
+    <button onclick="salvaDati()">Salva tutto</button>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
