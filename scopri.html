@@ -19,8 +19,14 @@
       margin: 10px 0;
     }
     #taskResult {
-      margin-top: 20px;
-      font-size: 1.4em;
+      margin-top: 30px;
+      font-size: 1.6em;
+      font-weight: bold;
+      background-color: #222;
+      color: #ffcc00;
+      padding: 20px;
+      border: 2px dashed #ffcc00;
+      border-radius: 12px;
     }
     img.footer-image {
       margin-top: 30px;
@@ -69,9 +75,9 @@
       }
 
       if (normalizedAssignments[player]) {
-        taskResult.innerHTML = `🎯 Il tuo task segreto è: <br><br><strong>${normalizedAssignments[player]}</strong>`;
+        taskResult.innerHTML = `🎯 Il tuo task segreto è:<br><br><em>${normalizedAssignments[player]}</em>`;
       } else {
-        taskResult.innerHTML = "🐧 Oggi NON sei tu la talpa.";
+        taskResult.innerHTML = "🐧 <strong>Oggi NON sei tu la talpa.</strong>";
       }
     }
   </script>
