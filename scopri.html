@@ -2,67 +2,65 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scopri il tuo task</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scopri il tuo Task</title>
   <style>
     body {
+      font-family: monospace;
       background-color: #111;
       color: #fff;
-      font-family: monospace;
       padding: 20px;
       text-align: center;
     }
     input, button {
-      font-size: 18px;
+      font-size: 1.2em;
       padding: 10px;
-      margin: 10px 0;
+      margin: 10px;
     }
-    .task-box {
+    #taskDisplay {
       margin-top: 30px;
-      background-color: #222;
-      padding: 20px;
-      border-radius: 10px;
+      font-size: 1.2em;
+      color: #ffcc00;
     }
   </style>
 </head>
 <body>
-  <h1>🎯 Scopri il tuo task</h1>
-  <p>Inserisci la tua password per scoprire il compito segreto di oggi:</p>
-  <input type="text" id="passwordInput" placeholder="Password" />
-  <button onclick="showTask()">SCOPRI</button>
-
-  <div class="task-box" id="taskBox"></div>
+  <h1>Scopri il tuo Task</h1>
+  <p>Inserisci la tua password per vedere se sei la talpa:</p>
+  <input type="password" id="passwordInput" placeholder="Password giocatore" />
+  <br>
+  <button onclick="verificaTask()">Scopri il mio task</button>
+  <div id="taskDisplay"></div>
 
   <script>
-    const passwordToPlayer = {
-      "Cardio89!": "Feddino",
-      "Neuro76!": "Chiaretta",
-      "Trauma44!": "Bomber",
-      "Gasto33!": "Perri",
-      "Emato22!": "Fefè",
-      "Infettivo55!": "Vax",
-      "Pneumo98!": "Alpha",
-      "Anestes88!": "Gambuz"
+    const players = {
+      "Feddino": "Cardio89!",
+      "Chiaretta": "Neuro76!",
+      "Bomber": "Ortopedico22!",
+      "Perri": "Dermato11!",
+      "Fefè": "Gastro55!",
+      "Vax": "Infettivo66!",
+      "Alpha": "Pneumo98!"
     };
 
-    function showTask() {
-      const pw = document.getElementById("passwordInput").value.trim();
-      const name = passwordToPlayer[pw];
-      const box = document.getElementById("taskBox");
-
-      if (!name) {
-        box.innerText = "❌ Password non riconosciuta.";
-        return;
+    function verificaTask() {
+      const input = document.getElementById("passwordInput").value;
+      const assignments = JSON.parse(localStorage.getItem("assignments") || "{}");
+      let trovato = false;
+      for (const [name, pwd] of Object.entries(players)) {
+        if (pwd === input) {
+          trovato = true;
+          const task = assignments[name];
+          if (task) {
+            document.getElementById("taskDisplay").innerText = "Il tuo task segreto: " + task;
+          } else {
+            document.getElementById("taskDisplay").innerText = "Oggi NON sei tu la talpa.";
+          }
+        }
       }
-
-      const assignments = JSON.parse(localStorage.getItem("taskAssignments") || "{}");
-      if (assignments[name]) {
-        box.innerText = `🕵️ Il tuo task segreto è:
-
-"${assignments[name]}"`;
-      } else {
-        box.innerText = "😎 Oggi NON sei tu la talpa.";
+      if (!trovato) {
+        document.getElementById("taskDisplay").innerText = "Password non valida.";
       }
     }
   </script>
