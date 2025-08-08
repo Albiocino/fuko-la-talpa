@@ -15,20 +15,20 @@
     h1, h2 {
       color: #ffcc00;
     }
-    input, button, textarea {
+    input, button, textarea, select {
       font-family: monospace;
       margin-top: 5px;
       margin-bottom: 10px;
       padding: 5px;
       font-size: 1em;
     }
-    .task {
-      margin-bottom: 5px;
-      border-bottom: 1px dotted #555;
-      padding-bottom: 3px;
+    .section {
+      border: 1px solid #444;
+      padding: 10px;
+      margin-bottom: 20px;
     }
-    .task button {
-      margin-left: 10px;
+    .item {
+      margin-bottom: 5px;
     }
   </style>
 </head>
@@ -39,66 +39,157 @@
   <button onclick="checkPassword()">Accedi</button>
 
   <div id="hostPanel" style="display:none;">
-    <h2>📝 Gestione Task</h2>
-    <textarea id="newTask" rows="2" cols="40" placeholder="Scrivi un nuovo task..."></textarea><br>
-    <button onclick="addTask()">Aggiungi Task</button>
-    <div id="taskList"></div>
+    <div class="section">
+      <h2>👥 Gestione Giocatori</h2>
+      <input id="newPlayer" placeholder="Nome giocatore" />
+      <button onclick="addPlayer()">Aggiungi</button>
+      <ul id="playerList"></ul>
+    </div>
+
+    <div class="section">
+      <h2>📝 Gestione Task</h2>
+      <textarea id="newTask" rows="2" cols="40" placeholder="Scrivi un nuovo task..."></textarea><br>
+      <button onclick="addTask()">Aggiungi Task</button>
+      <ul id="taskList"></ul>
+    </div>
+
+    <div class="section">
+      <h2>🎯 Assegna Task Casualmente</h2>
+      <button onclick="assignTasks()">Assegna Task</button>
+    </div>
+
+    <div class="section">
+      <h2>🧮 Assegna Punteggio</h2>
+      <select id="scorePlayer"></select>
+      <select id="scoreValue">
+        <option value="10">+10 (Talpa non scoperta)</option>
+        <option value="5">+5 (Chi scopre la talpa)</option>
+        <option value="2">+2 (Collaboratori)</option>
+        <option value="0">0 (Talpa scoperta)</option>
+        <option value="-2">-2 (Collaboratori scoperti)</option>
+        <option value="-5">-5 (Accusa sbagliata)</option>
+      </select>
+      <button onclick="assignScore()">Assegna</button>
+    </div>
+
+    <div class="section">
+      <h2>♻️ Reset Giornata</h2>
+      <button onclick="resetDay()">Reset Giornata</button>
+    </div>
   </div>
 
   <script>
+    const password = "Pneumo98!";
     const defaultTasks = [
       "Fai in modo che il gruppo perda un mezzo di trasporto",
       "Quando siamo in un ristorante a mangiare, vai in cucina e cucina qualche cosa di Italiano",
       "Ruba degli oggetti dei tuoi amici di continuo senza farti beccare fino a cena",
       "Cerca di convincere almeno 2 persone a prendere il piatto che ispira meno di tutti sul menù",
-      "Non puoi parlare con un membro del gruppo per tutto il giorno (scrivere o altre forme di comunicazione sono bandite)",
+      "Non puoi parlare con un membro del gruppo per tutto il giorno",
       "Imita un altro membro del gruppo per tutta una giornata",
       "Convinci un gruppo di turisti che non parla italiano che sei una persona famosa in Italia",
-      "Comportati da fascista per tutto il giorno (atteggiamento, commenti, uscite, vestiario, ...)",
-      "Sostieni che sei allergico a qualcosa di assurdo (es. 'alle sdraio') e agisci di conseguenza",
-      "Comportati tutto il giorno come se fossi in un reality show (es. parlando a una telecamera immaginaria)",
+      "Comportati da fascista per tutto il giorno",
+      "Sostieni che sei allergico a qualcosa di assurdo",
+      "Comportati tutto il giorno come se fossi in un reality show",
       "Fai amicizia con un venditore ambulante e porta il gruppo a casa sua",
-      "Prova a vendere oggetti tuoi a d un venditore ambulante",
-      "Compra una cosa disgustosa da mangiare e convinci almeno la metà +1 del gruppo che è buonissima e fagliela assaggiare"
+      "Prova a vendere oggetti tuoi a un venditore ambulante",
+      "Compra una cosa disgustosa da mangiare e convinci gli altri che è buonissima"
     ];
-
-    const password = "Pneumo98!";
 
     function checkPassword() {
       const input = document.getElementById("hostPassword").value;
       if (input === password) {
         document.getElementById("hostPanel").style.display = "block";
-        loadTasks();
+        loadData();
       } else {
         alert("Password errata.");
       }
     }
 
-    function loadTasks() {
-      const stored = JSON.parse(localStorage.getItem("tasks") || "[]");
-      if (stored.length === 0) {
+    function loadData() {
+      if (!localStorage.getItem("players")) {
+        localStorage.setItem("players", JSON.stringify([]));
+      }
+      if (!localStorage.getItem("tasks")) {
         localStorage.setItem("tasks", JSON.stringify(defaultTasks));
       }
+      if (!localStorage.getItem("scores")) {
+        localStorage.setItem("scores", JSON.stringify({}));
+      }
+      renderPlayers();
       renderTasks();
+      renderScoreSelect();
+    }
+
+    function renderPlayers() {
+      const list = document.getElementById("playerList");
+      list.innerHTML = "";
+      const players = JSON.parse(localStorage.getItem("players"));
+      players.forEach((name, index) => {
+        const li = document.createElement("li");
+        li.textContent = name + " ";
+        const del = document.createElement("button");
+        del.textContent = "❌";
+        del.onclick = () => {
+          players.splice(index, 1);
+          localStorage.setItem("players", JSON.stringify(players));
+          renderPlayers();
+          renderScoreSelect();
+        };
+        li.appendChild(del);
+        list.appendChild(li);
+      });
+    }
+
+    function renderScoreSelect() {
+      const sel = document.getElementById("scorePlayer");
+      sel.innerHTML = "";
+      const players = JSON.parse(localStorage.getItem("players"));
+      players.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+    }
+
+    function addPlayer() {
+      const name = document.getElementById("newPlayer").value.trim();
+      if (name) {
+        const players = JSON.parse(localStorage.getItem("players"));
+        if (!players.includes(name)) {
+          players.push(name);
+          localStorage.setItem("players", JSON.stringify(players));
+          document.getElementById("newPlayer").value = "";
+          renderPlayers();
+          renderScoreSelect();
+        }
+      }
     }
 
     function renderTasks() {
       const list = document.getElementById("taskList");
       list.innerHTML = "";
-      const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+      const tasks = JSON.parse(localStorage.getItem("tasks"));
       tasks.forEach((task, index) => {
-        const div = document.createElement("div");
-        div.className = "task";
-        div.innerHTML = `<span>${task}</span>
-                         <button onclick="deleteTask(${index})">❌</button>`;
-        list.appendChild(div);
+        const li = document.createElement("li");
+        li.textContent = task + " ";
+        const del = document.createElement("button");
+        del.textContent = "❌";
+        del.onclick = () => {
+          tasks.splice(index, 1);
+          localStorage.setItem("tasks", JSON.stringify(tasks));
+          renderTasks();
+        };
+        li.appendChild(del);
+        list.appendChild(li);
       });
     }
 
     function addTask() {
       const task = document.getElementById("newTask").value.trim();
       if (task) {
-        const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+        const tasks = JSON.parse(localStorage.getItem("tasks"));
         tasks.push(task);
         localStorage.setItem("tasks", JSON.stringify(tasks));
         document.getElementById("newTask").value = "";
@@ -106,11 +197,35 @@
       }
     }
 
-    function deleteTask(index) {
-      const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-      tasks.splice(index, 1);
-      localStorage.setItem("tasks", JSON.stringify(tasks));
-      renderTasks();
+    function assignTasks() {
+      const players = JSON.parse(localStorage.getItem("players"));
+      const tasks = [...JSON.parse(localStorage.getItem("tasks"))];
+      if (players.length === 0 || tasks.length === 0) {
+        alert("Aggiungi prima giocatori e task.");
+        return;
+      }
+      const assignments = {};
+      players.forEach(player => {
+        if (tasks.length === 0) return;
+        const index = Math.floor(Math.random() * tasks.length);
+        assignments[player] = tasks.splice(index, 1)[0];
+      });
+      localStorage.setItem("assignments", JSON.stringify(assignments));
+      alert("Task assegnati!");
+    }
+
+    function assignScore() {
+      const player = document.getElementById("scorePlayer").value;
+      const value = parseInt(document.getElementById("scoreValue").value);
+      const scores = JSON.parse(localStorage.getItem("scores"));
+      scores[player] = (scores[player] || 0) + value;
+      localStorage.setItem("scores", JSON.stringify(scores));
+      alert(`Assegnato ${value} punti a ${player}`);
+    }
+
+    function resetDay() {
+      localStorage.removeItem("assignments");
+      alert("Reset completato. Nuova giornata pronta!");
     }
   </script>
 </body>
